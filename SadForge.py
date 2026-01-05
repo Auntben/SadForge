@@ -513,12 +513,10 @@ class ForgeGUI(QWidget):
         except Exception:
             pass
 
-        # if a temp log was preserved, open it for inspection to help debugging
+        # if a temp log was preserved, keep note of its path but do not open it automatically
         try:
             if self._last_temp_log and os.path.exists(self._last_temp_log):
-                self._append_log(f"Opening preserved temp log: {self._last_temp_log}")
-                if sys.platform == 'win32':
-                    subprocess.Popen(['notepad.exe', self._last_temp_log])
+                self._append_log(f"Preserved temp log: {self._last_temp_log}")
         except Exception:
             pass
         self._rendering = False
@@ -547,6 +545,11 @@ class ForgeGUI(QWidget):
                 # Set status text in the last column
                 if not item:
                     return
+                # Log status transitions for debugging
+                try:
+                    self._append_log(f"Status update for '{item.text(0)}' -> {status}")
+                except Exception:
+                    pass
                 col = 3
                 item.setText(col, status)
                 # Apply foreground color to all columns for visibility
@@ -997,10 +1000,10 @@ class ForgeGUI(QWidget):
                             except Exception:
                                 pass
 
-                            # offer to open it automatically (Windows)
+                            # Do not automatically open the preserved temp log; just log its path
                             try:
-                                if sys.platform == 'win32' and os.path.exists(tmpname):
-                                    subprocess.Popen(['notepad.exe', tmpname])
+                                if os.path.exists(tmpname):
+                                    self._append_log(f"Preserved temp log: {tmpname}")
                             except Exception:
                                 pass
                         else:
