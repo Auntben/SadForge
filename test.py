@@ -25,6 +25,8 @@ from PyQt6.QtWidgets import (
 from PyQt6.QtCore import Qt, QSize
 
 class ForgeGUI(QWidget):
+
+    # Where we build out the UI elements
     def __init__(self):
         super().__init__()
         # self.setWindowIcon(QIcon(resource_path("SadForge.ico")))
@@ -103,68 +105,70 @@ class ForgeGUI(QWidget):
         self.tree.setColumnWidth(2, 300)
         self.tree.setColumnWidth(3, 120)
 
-        # # --- Bottom action buttons ---
-        # btn_layout = QHBoxLayout()
-        # self.start_btn = QPushButton("Start Render Queue")
-        # self.start_btn.clicked.connect(self.start_render_queue)
-        # self.clear_btn = QPushButton("Clear Render Queue")
-        # self.clear_btn.clicked.connect(self.clear_render_queue)
-        # btn_layout.addStretch(1)
-        # btn_layout.addWidget(self.clear_btn)
-        # btn_layout.addWidget(self.start_btn)
-        # self.layout.addLayout(btn_layout)
+        # --- Bottom action buttons ---
+        btn_layout = QHBoxLayout()
+        self.start_btn = QPushButton("Start Render Queue")
+        self.start_btn.clicked.connect(self.start_render_queue)
+        self.clear_btn = QPushButton("Clear Render Queue")
+        self.clear_btn.clicked.connect(self.clear_render_queue)
+        btn_layout.addStretch(1)
+        btn_layout.addWidget(self.clear_btn)
+        btn_layout.addWidget(self.start_btn)
+        self.layout.addLayout(btn_layout)
 
-        # # --- Collapsible output log and command controls ---
-        # log_control_layout = QHBoxLayout()
-        # self.log_toggle = QPushButton("Show Log")
-        # self.log_toggle.setCheckable(True)
-        # self.log_toggle.clicked.connect(self._toggle_log_visibility)
-        # # Toggle to show exact commands that will be executed
-        # self.show_cmds_toggle = QPushButton("Show Commands")
-        # self.show_cmds_toggle.setCheckable(True)
-        # self.show_cmds_toggle.clicked.connect(self._toggle_cmds_visibility)
+        # --- Collapsible output log and command controls ---
+        log_control_layout = QHBoxLayout()
+        self.log_toggle = QPushButton("Show Log")
+        self.log_toggle.setCheckable(True)
+        self.log_toggle.clicked.connect(self._toggle_log_visibility)
+        # Toggle to show exact commands that will be executed
+        self.show_cmds_toggle = QPushButton("Show Commands")
+        self.show_cmds_toggle.setCheckable(True)
+        self.show_cmds_toggle.clicked.connect(self._toggle_cmds_visibility)
 
-        # log_control_layout.addWidget(self.show_cmds_toggle)
-        # log_control_layout.addWidget(self.log_toggle)
-        # log_control_layout.addStretch(1)
-        # self.layout.addLayout(log_control_layout)
+        log_control_layout.addWidget(self.show_cmds_toggle)
+        log_control_layout.addWidget(self.log_toggle)
+        log_control_layout.addStretch(1)
+        self.layout.addLayout(log_control_layout)
 
-        # self.commands_text = QTextEdit()
-        # self.commands_text.setReadOnly(True)
-        # self.commands_text.setVisible(False)
-        # self.commands_text.setFixedHeight(120)
-        # self.layout.addWidget(self.commands_text)
+        self.commands_text = QTextEdit()
+        self.commands_text.setReadOnly(True)
+        self.commands_text.setVisible(False)
+        self.commands_text.setFixedHeight(120)
+        self.layout.addWidget(self.commands_text)
 
-        # self.log_text = QTextEdit()
-        # self.log_text.setReadOnly(True)
-        # self.log_text.setVisible(False)
-        # self.layout.addWidget(self.log_text)
+        self.log_text = QTextEdit()
+        self.log_text.setReadOnly(True)
+        self.log_text.setVisible(False)
+        self.layout.addWidget(self.log_text)
 
-        # # Internal state for rendering control
-        # self._rendering = False
-        # self._stop_render_event = threading.Event()
-        # self._current_proc = None
-        # self._render_thread = None
-        # # used to ignore immediate double-click stop requests
-        # self._render_start_timestamp = 0.0
-        # # keep path to last temp per-job log if preserved
-        # self._last_temp_log = None
-        # # store the last built commands for display
-        # self._last_built_commands = []
+        # Internal state for rendering control
+        self._rendering = False
+        self._stop_render_event = threading.Event()
+        self._current_proc = None
+        self._render_thread = None
+        # used to ignore immediate double-click stop requests
+        self._render_start_timestamp = 0.0
+        # keep path to last temp per-job log if preserved
+        self._last_temp_log = None
+        # store the last built commands for display
+        self._last_built_commands = []
 
-        # # Auto-refresh timer for displaying the preserved temp log in GUI
-        # self._auto_refresh_timer = QTimer()
-        # self._auto_refresh_timer.setInterval(1000)  # 1 second
-        # self._auto_refresh_timer.timeout.connect(self._refresh_preserved_log)
+        # Auto-refresh timer for displaying the preserved temp log in GUI
+        self._auto_refresh_timer = QTimer()
+        self._auto_refresh_timer.setInterval(1000)  # 1 second
+        self._auto_refresh_timer.timeout.connect(self._refresh_preserved_log)
 
         self.setLayout(self.layout)
 
+    # The function that selects the render queue folder
     def select_folder(self):
         dir_path = QFileDialog.getExistingDirectory(self, "Select Folder", os.path.expanduser("~"))
         
         if dir_path:
             self.folder_edit.setText(dir_path)
     
+    # This scans the folder looking for xStage Files and adds them to the list
     def scan_folder(self):
         base = self.folder_edit.text().strip()
         if not base:
@@ -379,6 +383,51 @@ class ForgeGUI(QWidget):
         data.update({"render_mode": "range", "start": s, "end": e})
         item.setData(0, Qt.ItemDataRole.UserRole + 1, data)
         item.setToolTip(2, f"Frames: {s} - {e}")
+
+    # Function to clear the render queue
+    def clear_render_queue(self):
+        # Remove all top-level items and clear the selected folder
+        self.tree.clear()
+        self.folder_edit.clear()
+        self.status_label.setText("Queue cleared")
+
+    # Function to make sure Harmonyt is Installed and finding it to use.
+    def _find_harmony_exe(self):
+       
+        # 1) Check PATH
+        exe_name = "HarmonyPremium.exe"
+        if shutil.which(exe_name):
+            return shutil.which(exe_name)
+
+        # 2) Look in known Program Files path for Harmony 25 Premium
+        base = r"C:\Program Files (x86)\Toon Boom Animation"
+        candidate = os.path.join(base, r"Toon Boom Harmony 25 Premium", r"win64", "bin", exe_name)
+        if os.path.isfile(candidate):
+            return candidate
+
+        # 3) If base exists, search for highest version folder then win64/bin
+        if os.path.isdir(base):
+            entries = [d for d in os.listdir(base) if os.path.isdir(os.path.join(base, d)) and 'harmony' in d.lower()]
+            if entries:
+                # sort by version number found in folder name
+                def version_key(name):
+                    m = re.search(r"(\d+)", name)
+                    return int(m.group(1)) if m else 0
+                entries.sort(key=version_key, reverse=True)
+                for e in entries:
+                    candidate = os.path.join(base, e, r"win64", "bin", exe_name)
+                    if os.path.isfile(candidate):
+                        return candidate
+
+        # 4) Not found — prompt user to locate it
+        dlg = QFileDialog(self, "Locate HarmonyPremium.exe")
+        dlg.setFileMode(QFileDialog.FileMode.ExistingFile)
+        dlg.setNameFilter("HarmonyPremium.exe")
+        if dlg.exec():
+            files = dlg.selectedFiles()
+            if files:
+                return files[0]
+        return None
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)

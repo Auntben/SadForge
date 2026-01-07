@@ -378,32 +378,32 @@ class ForgeGUI(QWidget):
         item.setData(0, Qt.ItemDataRole.UserRole + 1, data)
         item.setToolTip(2, f"Frames: {s} - {e}")
 
-    def open_in_explorer(self, item, column):
-        base = self.folder_edit.text().strip()
-        if not base:
-            return
-        # Determine whether a top-level or child item was clicked and construct
-        # the actual path accordingly.
-        if item.parent() is None:
-            rel = item.text(0)
-            # If rel is just a folder name, try to join with base. If it is
-            # already relative path, os.path.join will still work.
-            path = os.path.normpath(os.path.join(base, rel))
-        else:
-            parent_rel = item.parent().text(0)
-            path = os.path.normpath(os.path.join(base, parent_rel, item.text(0)))
+    # def open_in_explorer(self, item, column):
+    #     base = self.folder_edit.text().strip()
+    #     if not base:
+    #         return
+    #     # Determine whether a top-level or child item was clicked and construct
+    #     # the actual path accordingly.
+    #     if item.parent() is None:
+    #         rel = item.text(0)
+    #         # If rel is just a folder name, try to join with base. If it is
+    #         # already relative path, os.path.join will still work.
+    #         path = os.path.normpath(os.path.join(base, rel))
+    #     else:
+    #         parent_rel = item.parent().text(0)
+    #         path = os.path.normpath(os.path.join(base, parent_rel, item.text(0)))
 
-        # If the path is a file, open folder containing it instead
-        if os.path.isfile(path):
-            path = os.path.dirname(path)
+    #     # If the path is a file, open folder containing it instead
+    #     if os.path.isfile(path):
+    #         path = os.path.dirname(path)
 
-        try:
-            if sys.platform == "win32":
-                subprocess.Popen(['explorer', path])
-            else:
-                subprocess.Popen(['xdg-open', path])
-        except Exception as e:
-            QMessageBox.warning(self, "Open failed", f"Could not open path:\n{path}\n\n{e}")
+    #     try:
+    #         if sys.platform == "win32":
+    #             subprocess.Popen(['explorer', path])
+    #         else:
+    #             subprocess.Popen(['xdg-open', path])
+    #     except Exception as e:
+    #         QMessageBox.warning(self, "Open failed", f"Could not open path:\n{path}\n\n{e}")
 
     def clear_render_queue(self):
         # Remove all top-level items and clear the selected folder
