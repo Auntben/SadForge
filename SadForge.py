@@ -33,11 +33,11 @@ class ForgeGUI(QWidget):
         super().__init__()
         # self.setWindowIcon(QIcon(resource_path("SadForge.ico")))
         self.resize(1200, 800)
-        self.setWindowTitle("SadForge v26.0")
+        self.setWindowTitle("SadForge v26.0 b1")
         self.layout = QVBoxLayout()
 
         # --- Add large title at the very top ---
-        self.title_label = QLabel("Sadforge v26.0")
+        self.title_label = QLabel("Sadforge v26.0 b1")
         font = QFont()
         font.setPointSize(20)
         font.setBold(True)
@@ -85,8 +85,8 @@ class ForgeGUI(QWidget):
         # --- Results tree ---
         self.tree = QTreeWidget()
         # Four columns: project folder, selector, render options, and status
-        self.tree.setColumnCount(4)
-        self.tree.setHeaderLabels(["Project Folder", "File to Render", "Render Frame Range", "Status"])
+        self.tree.setColumnCount(3)
+        self.tree.setHeaderLabels(["Project Folder", "File to Render", "Render Frame Range"])  #, "Status"
         self.tree.setRootIsDecorated(False)        # Prevent expanding/collapsing items on double-click so users don't
         # unintentionally reveal xstage files.
         self.tree.setExpandsOnDoubleClick(False)        # Note: double-click no longer opens Explorer to avoid accidental opens.
@@ -194,7 +194,7 @@ class ForgeGUI(QWidget):
                 # Create top-level item; the second column will host the
                 # combo box widget and the third column will host the render widget
                 # and the fourth column will show status (Pending/Rendering/Done/Failed)
-                item = QTreeWidgetItem([rel, "", "", "Pending"])
+                item = QTreeWidgetItem([rel, "", ""])  #, "Pending"
                 self.tree.addTopLevelItem(item)
 
                 # Add child rows listing the matching files (filename in column 0)
@@ -534,37 +534,37 @@ class ForgeGUI(QWidget):
             self.log_text.verticalScrollBar().setValue(self.log_text.verticalScrollBar().maximum())
         QTimer.singleShot(0, do_append)
 
-    def _set_item_status(self, item, status, color=None):
-        """Thread-safe update of a top-level item's Status column and color.
+    # def _set_item_status(self, item, status, color=None):
+    #     """Thread-safe update of a top-level item's Status column and color.
 
-        color may be a CSS color name or hex string understood by QColor.
-        Runs the GUI updates on the main thread using QTimer.singleShot.
-        """
-        def do_set():
-            try:
-                # Set status text in the last column
-                if not item:
-                    return
-                # Log status transitions for debugging
-                try:
-                    self._append_log(f"Status update for '{item.text(0)}' -> {status}")
-                except Exception:
-                    pass
-                col = 3
-                item.setText(col, status)
-                # Apply foreground color to all columns for visibility
-                try:
-                    if color:
-                        brush = QBrush(QColor(color))
-                    else:
-                        brush = QBrush(QColor('black'))
-                    for c in range(self.tree.columnCount()):
-                        item.setForeground(c, brush)
-                except Exception:
-                    pass
-            except Exception:
-                pass
-        QTimer.singleShot(0, do_set)
+    #     color may be a CSS color name or hex string understood by QColor.
+    #     Runs the GUI updates on the main thread using QTimer.singleShot.
+    #     """
+    #     def do_set():
+    #         try:
+    #             # Set status text in the last column
+    #             if not item:
+    #                 return
+    #             # Log status transitions for debugging
+    #             try:
+    #                 self._append_log(f"Status update for '{item.text(0)}' -> {status}")
+    #             except Exception:
+    #                 pass
+    #             col = 3
+    #             item.setText(col, status)
+    #             # Apply foreground color to all columns for visibility
+    #             try:
+    #                 if color:
+    #                     brush = QBrush(QColor(color))
+    #                 else:
+    #                     brush = QBrush(QColor('black'))
+    #                 for c in range(self.tree.columnCount()):
+    #                     item.setForeground(c, brush)
+    #             except Exception:
+    #                 pass
+    #         except Exception:
+    #             pass
+    #     QTimer.singleShot(0, do_set)
 
     def _toggle_log_visibility(self):
         if self.log_toggle.isChecked():
@@ -721,11 +721,11 @@ class ForgeGUI(QWidget):
             jobs.append((item, xstage, render_opts))
 
         # Ensure all queued items show 'Pending' before starting
-        for job_item, _, _ in jobs:
-            try:
-                self._set_item_status(job_item, 'Pending', None)
-            except Exception:
-                pass
+        # for job_item, _, _ in jobs:
+        #     try:
+        #         self._set_item_status(job_item, 'Pending', None)
+        #     except Exception:
+        #         pass
 
         if not jobs:
             QMessageBox.information(self, "No jobs", "No render jobs are selected.")
@@ -783,7 +783,7 @@ class ForgeGUI(QWidget):
                     break
 
                 # Update item status to In Progress (orange)
-                self._set_item_status(item, "In Progress", "orange")
+                # self._set_item_status(item, "In Progress", "orange")
 
                 cmd = [exe, "-scene", path, "-overwrite", "-batch", "-verbose", "-writenode", "all"]
                 # If frame range
@@ -964,13 +964,13 @@ class ForgeGUI(QWidget):
                         if rc not in (0, None) or self._stop_render_event.is_set():
                             self._append_log(f"Preserving temp log for inspection: {tmpname}")
                             # Mark item as failed if non-zero or stopped
-                            try:
-                                if rc not in (0, None) and not self._stop_render_event.is_set():
-                                    self._set_item_status(item, 'Failed', 'red')
-                                else:
-                                    self._set_item_status(item, 'Stopped', 'red')
-                            except Exception:
-                                pass
+                            # try:
+                            #     if rc not in (0, None) and not self._stop_render_event.is_set():
+                            #         # self._set_item_status(item, 'Failed', 'red')
+                            #     else:
+                            #         # self._set_item_status(item, 'Stopped', 'red')
+                            # except Exception:
+                            #     pass
 
                             # Also load recent portion of the temp log(s) into the GUI
                             try:
@@ -1022,11 +1022,11 @@ class ForgeGUI(QWidget):
                         pass
 
                     # If we reached here and the job completed successfully, mark it done
-                    try:
-                        if rc == 0 and not self._stop_render_event.is_set():
-                            self._set_item_status(item, 'Completed', 'green')
-                    except Exception:
-                        pass
+                    # try:
+                    #     if rc == 0 and not self._stop_render_event.is_set():
+                    #         self._set_item_status(item, 'Completed', 'green')
+                    # except Exception:
+                    #     pass
                 except Exception as e:
                     self._append_log(f"Job failed: {e}")
                     # log the full traceback for debugging
