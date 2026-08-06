@@ -125,7 +125,7 @@ class MainWindow(QMainWindow):
         title_font.setPointSize(20)
         title_font.setBold(True)
         title_lbl.setFont(title_font)
-        ver_lbl = QLabel('v26')
+        ver_lbl = QLabel('v26.1')
         ver_lbl.setStyleSheet('color:#9E9E9E; font-size:13px;')
         ver_lbl.setAlignment(Qt.AlignmentFlag.AlignBottom)
         title_bar.addWidget(title_lbl)
@@ -202,7 +202,12 @@ class MainWindow(QMainWindow):
         self._ver_combo = QComboBox()
         self._ver_combo.setMinimumWidth(310)
         ctrl_lay.addWidget(self._ver_combo)
-        ctrl_lay.addSpacing(14)
+        browse_exe_btn = QPushButton('Browse…')
+        browse_exe_btn.setFixedWidth(80)
+        browse_exe_btn.setToolTip('Select a Harmony executable from a custom install location')
+        browse_exe_btn.clicked.connect(self._browse_harmony_exe)
+        ctrl_lay.addWidget(browse_exe_btn)
+        ctrl_lay.addSpacing(6)
 
         self._prog_lbl = QLabel()
         self._prog_lbl.setVisible(False)
@@ -284,6 +289,22 @@ class MainWindow(QMainWindow):
             )
 
     # ── Folder / scene loading ─────────────────────────────────────────────────
+
+    def _browse_harmony_exe(self):
+        exe, _ = QFileDialog.getOpenFileName(
+            self, 'Select Harmony Executable', '', 'Executables (*.exe)'
+        )
+        if not exe:
+            return
+        # Avoid duplicates
+        for i in range(self._ver_combo.count()):
+            if self._ver_combo.itemData(i) == exe:
+                self._ver_combo.setCurrentIndex(i)
+                return
+        label = f'Custom: {exe}'
+        self._ver_combo.addItem(label, exe)
+        self._ver_combo.setCurrentIndex(self._ver_combo.count() - 1)
+        self._append_log(f'Added custom Harmony executable: <b>{exe}</b>')
 
     def _browse_folder(self):
         folder = QFileDialog.getExistingDirectory(self, 'Select Scenes Folder')
